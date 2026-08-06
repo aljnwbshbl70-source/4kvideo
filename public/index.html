@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🇾🇪 CC Edit | رافع جودة الفيديو الاحترافي</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@500;700;900&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Tajawal', sans-serif; background: #0b0f19; color: #e2e8f0; }
+    .glow { box-shadow: 0 0 25px rgba(59, 130, 246, 0.4); }
+  </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-4">
+
+  <div class="max-w-md w-full bg-slate-900/80 border border-slate-800 rounded-2xl p-6 shadow-2xl backdrop-blur-lg">
+    <div class="text-center mb-6">
+      <h1 class="text-2xl font-black tracking-wide text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-emerald-400">
+        4K ULTRA CC ENHANCER
+      </h1>
+      <p class="text-xs text-slate-400 mt-1">رفع الحدة والألوان بأسلوب التيك توك (CC Edit)</p>
+    </div>
+
+    <!-- منطقة رفع الملف -->
+    <div id="dropZone" class="border-2 border-dashed border-slate-700 hover:border-blue-500 rounded-xl p-6 text-center cursor-pointer transition-all">
+      <input type="file" id="videoInput" accept="video/*" class="hidden" />
+      <div id="uploadText">
+        <svg class="w-12 h-12 mx-auto text-blue-500 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
+        </svg>
+        <p class="text-sm font-bold">اضغط أو اسحب الفيديو هنا</p>
+        <p class="text-xs text-slate-500 mt-1">يفضل مقاطع تيك توك القصيرة (أقل من 30 ثانية)</p>
+      </div>
+    </div>
+
+    <!-- شريط الحالة -->
+    <div id="status" class="hidden mt-4 text-center">
+      <div class="w-full bg-slate-800 rounded-full h-2.5 overflow-hidden mb-2">
+        <div id="progressBar" class="bg-gradient-to-r from-blue-500 to-emerald-500 h-2.5 w-full animate-pulse"></div>
+      </div>
+      <p id="statusText" class="text-xs font-bold text-blue-400">جاري معالجة الألوان ورفع الجودة...</p>
+    </div>
+
+    <!-- زر التنفيذ -->
+    <button id="enhanceBtn" class="w-full mt-6 bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-600 text-white font-bold py-3 rounded-xl shadow-lg glow transition-all disabled:opacity-50" disabled>
+      ابدأ معالجة الفيديو ⚡
+    </button>
+  </div>
+
+  <script>
+    const dropZone = document.getElementById('dropZone');
+    const videoInput = document.getElementById('videoInput');
+    const enhanceBtn = document.getElementById('enhanceBtn');
+    const status = document.getElementById('status');
+    const statusText = document.getElementById('statusText');
+    const uploadText = document.getElementById('uploadText');
+
+    dropZone.addEventListener('click', () => videoInput.click());
+
+    videoInput.addEventListener('change', (e) => {
+      if (e.target.files.length > 0) {
+        const file = e.target.files[0];
+        uploadText.innerHTML = `<p class="text-sm font-bold text-emerald-400">تم اختيار: ${file.name}</p>`;
+        enhanceBtn.disabled = false;
+      }
+    });
+
+    enhanceBtn.addEventListener('click', async () => {
+      const file = videoInput.files[0];
+      if (!file) return;
+
+      enhanceBtn.disabled = true;
+      status.classList.remove('hidden');
+      statusText.innerText = 'جاري رفع الفيديو ومعالجته على السيرفر...';
+
+      const formData = new FormData();
+      formData.append('video', file);
+
+      try {
+        const response = await fetch('/api/enhance', {
+          method: 'POST',
+          body: formData
+        });
+
+        if (!response.ok) throw new Error('حدث خطأ أثناء المعالجة');
+
+        statusText.innerText = 'تمت المعالجة! جاري تحميل الفيديو جاهزاً...';
+        const blob = await response.blob();
+        const downloadUrl = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = downloadUrl;
+        a.download = `4K_CC_EDIT_${file.name}`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        
+        statusText.innerText = 'تم التحميل بنجاح! ✨';
+      } catch (err) {
+        alert('حدث خطأ! تأكد أن الفيديو قصير ولا يتعدى 30 ثانية لتجنب انتهاء وقت السيرفر مجاناً.');
+        status.classList.add('hidden');
+      } finally {
+        enhanceBtn.disabled = false;
+      }
+    });
+  </script>
+</body>
+</html>
